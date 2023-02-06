@@ -1,3 +1,5 @@
 arbtt-stats
 render/data/*
 render/loglist.json
+*.csv
+*.cfg
