@@ -6,4 +6,3 @@ arbtt-stats --categorizefile=%CATEGORIZE_FILE% --for-each=day --output-format=CS
 
 arbtt-stats --categorizefile=%CATEGORIZE_FILE% --for-each=minute --output-format=CSV --category=%CATEGORY% --min-percentage=0.1 > minute.csv
 
-python readArbttStats.py -c "misc" -d C:\Users\osama\Projects\arbtt-graph\daily.csv -m C:\Users\osama\Projects\arbtt-graph\minute.csv

@@ -28,7 +28,21 @@ app.layout = dbc.Container([
 
     dbc.Row([
       
-    html.Button('Reload', id='re-button')],
+        dbc.Col(dbc.Button('Reload', id='re-button', color='primary', className='mr-1',), width=4),
+        dbc.Col(dbc.Select(id='select') , width=4),
+        dbc.Col(dbc.Button('Load', id='ld-button', color='primary', className='mr-1',), width=2),
+        ]
+    ),
+
+    # Model with 2 graphs 
+    dbc.Modal([
+        dbc.ModalHeader("Stats for the day", id='modal-header'),
+        dbc.ModalBody(children=[
+            dcc.Graph(id='g-pie-day'),
+            dcc.Graph(id='g-heat-day'),
+        ]),
+        dbc.ModalFooter(id='modal-footer'),
+    ], id="modal", size='xl', is_open=False,
     ),
 
     dbc.Row( html.H2('Time spent per category pie + stacked'),),
@@ -91,6 +105,17 @@ def update_graph(n_clicks):
 
     return df.to_json(date_format='iso' ),df2.to_json(date_format='iso')
 
+@app.callback(
+    Output('select', 'options'),
+    Input('store', 'data'))
+def update_options(data):
+    df = pd.read_json(data)
+    # read the 'Day' col as a datetime object
+    df['Day'] = pd.to_datetime(df['Day'])
+    # strftime as 1st of Jan 2020
+    return [{'label': i.strftime("%d %B  (%A)"), 'value': i} for i in df['Day']]
+    # unique 
+    
 @app.callback(
     Output('g-pie-all', 'figure'),
     Input('store', 'data'))
@@ -206,6 +231,17 @@ def update_graph5(data):
     # plot
     return fig
 
+@app.callback(
+    Output('g-pie-day', 'figure'),
+    Output('g-heat-day', 'figure'),
+    Output('Modal-header', 'children'),
+    Output('Modal-body', 'children'),
+    Output('Modal', 'is_open'),
+    Input('ld-button', 'n_clicks'),
+
+)
+def update_graph6(n_clicks):
+    return fig, fig2, 'Modal Header', 'Modal Body', True
 
 if __name__ == '__main__':
     app.run_server(debug=True)
