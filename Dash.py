@@ -64,7 +64,45 @@ app.layout = dbc.Container([
         ]),
 
     
-    ],fluid=True,style={'padding': '10px'})
+    ],fluid=True,style={'padding-left': '150px', 'margin-left': '10px', 'backgroundColor': '#f9f9f9'})
+def read_csv(df):
+    df['Day'] = pd.to_datetime(df['Day'])
+
+    # for each row read Tag col, read and remove the 'Graph' and ':' from the name
+    df['Tag'] = df['Tag'].apply(lambda x: x.split(':')[1] if 'Graph' in x else x)
+    df.head()
+
+    #remove any 'unamtched' tags
+    df = df[df['Tag'] != '(unmatched time)']
+    # convert time from string to datetime then get number of hours
+
+
+    df['Time'] = pd.to_timedelta(df['Time'])
+    return df
+
+def modify_time_per_tag_per_day(df,tag_to_modify,day_to_modify,time_to_adjust):
+    """
+    Modify the time used for a specific tag in a specific day
+        :param df: dataframe with the data
+        :param tag_to_modify: tag to modify
+        :param day_to_modify: day to modify
+        :param time_to_adjust: time to add or subtract
+        :return: dataframe with the modified time
+
+    Example:
+            tag_to_modify = 'code-work'
+            time_to_adjust = '08:00:00'
+            day_to_modify = pd.to_datetime('2023-01-25')
+
+    """
+    # Find the row with the specified tag and modify the time used
+    tag_row = df.loc[(df['Tag'] == tag_to_modify) & (df['Day'] == day_to_modify)]
+    tag_row['Time'] = pd.to_timedelta(tag_row['Time']) + pd.to_timedelta(time_to_adjust)
+    df.loc[(df['Tag'] == tag_to_modify) & (df['Day'] == day_to_modify), 'Time'] = tag_row['Time']
+    # # Calculate the total time and percentage for all tags in day_to_modify
+    total_time = df.loc[df['Day'] == day_to_modify]['Time'].sum()
+    df.loc[df['Day'] == day_to_modify, 'Percentage'] = df.loc[df['Day'] == day_to_modify]['Time'] / total_time * 100
+    return df
 
 @app.callback(
     Output('store','data'),Output('store2','data'),Input('re-button','n_clicks'),)
@@ -72,17 +110,13 @@ app.layout = dbc.Container([
 def update_graph(n_clicks):
     os.system('update2.cmd')
     # read csv
-    df = pd.read_csv('daily.csv')
-    df['Day'] = pd.to_datetime(df['Day'])
-
-    # for each row read Tag col, read and remove the 'Graph' and ':' from the name
-    df['Tag'] = df['Tag'].apply(lambda x: x.split(':')[1] if 'Graph' in x else x)
-
-    #remove any 'unamtched' tags
-    df = df[df['Tag'] != '(unmatched time)']
-
+    df_a = read_csv(pd.read_csv('daily.csv'))
+    df = read_csv(pd.read_csv('daily_archive.csv'))
+    df = pd.concat([df, df_a[df_a['Day'] == df_a['Day'].max()]])
+    del df_a
+    print(df.tail())
     # group by Tag and Day
-    df = df.groupby(['Tag', 'Day']).sum().reset_index()
+    # df = df.groupby(['Tag', 'Day']).sum().reset_index()
     df['Day of the week'] = df['Day'].dt.day_name()
     df['Productivity'] = df['Tag'].apply(lambda x: 1 if x in PRODUCTIVITY_LIST else 0)
     
@@ -245,3 +279,7 @@ def update_graph6(n_clicks):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
+
+   #Add manual add to minuaTe csv using an extra csv file that has dates + categories of extra time spent 
+   #then combine the two csv files and then run the code above  
