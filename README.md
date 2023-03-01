@@ -1,4 +1,4 @@
-arbtt-graph
+arbtt-plot
 ===========
 
 ## arbtt - Automatic Rule Based Time Tracker
@@ -33,19 +33,19 @@ It is pretty cool. But you would agree that colored graphs are much more strikin
 1. Install [`arbtt`](http://arbtt.nomeata.de/#install). Run `arbtt-capture` at startup.
 2. Probably let it run for some time to have some data.
 
-### Using arbtt-graph
+### Using arbtt-plot
 
 1. Clone/download this repository.
 2. Have a look at the `categorize.cfg` file. Add similar categories to your `categorize.cfg` file. (Usually at `~/.arbtt/categorize.cfg`).
-3. **Important:** Modify path of the file in `update`.
-4. **Important:** Accordingly modify `render/settings.js` for barcode categories.
-5. Once everything is set up, run `update` once.
-6. Now you can run `./arbtt-serve.py` (or `python3 arbtt-serve.py`) and go to the displayed address. (Default: <`http://localhost:9999`>)
+3. **Important:** Modify path of the file in `update2`.
+categories.
+5. Once everything is set up, run `update2` once.
+6. Now you can run `./Dash.py` (or `python3 Dash.py`) and go to the displayed address. (Default: <`http://localhost:8050`>)
 7. You can refresh anytime using the reload button to the right.
 
 ## Structure
 
-All html/js UI is inside the `render` folder. Also no information other than the percentage usage is inside the `json` files, so you can even make the plots public for extra extrinsic motivation. :smile:
+Everything is done using plotly Dash. Reading the csv files we can plot mnay of the stats using basic plotly functions and display them inside divs using bootstrap plotly dash. :smile:
 
 Suggestions and pull requests are always welcome.
 
