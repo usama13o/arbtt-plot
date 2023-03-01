@@ -80,6 +80,14 @@ def read_csv(df):
     df['Time'] = pd.to_timedelta(df['Time'])
     return df
 
+def save_modified_csv(tag_row):
+    if not os.path.exists('daily_modi.csv'):
+        tag_row.to_csv('daily_modi.csv', index=False)
+        return
+    d = read_csv(pd.read_csv('daily_modi.csv'))
+    d = pd.concat([d, tag_row])
+    d = d.drop_duplicates(subset=['Tag', 'Day'], keep='last')
+    d.to_csv('daily_modi.csv', index=False)
 def modify_time_per_tag_per_day(df,tag_to_modify,day_to_modify,time_to_adjust):
     """
     Modify the time used for a specific tag in a specific day
@@ -102,6 +110,7 @@ def modify_time_per_tag_per_day(df,tag_to_modify,day_to_modify,time_to_adjust):
     # # Calculate the total time and percentage for all tags in day_to_modify
     total_time = df.loc[df['Day'] == day_to_modify]['Time'].sum()
     df.loc[df['Day'] == day_to_modify, 'Percentage'] = df.loc[df['Day'] == day_to_modify]['Time'] / total_time * 100
+    save_modified_csv(df.loc[df['Day'] == day_to_modify])
     return df
 
 @app.callback(
@@ -110,13 +119,20 @@ def modify_time_per_tag_per_day(df,tag_to_modify,day_to_modify,time_to_adjust):
 def update_graph(n_clicks):
     os.system('update2.cmd')
     # read csv
-    df_a = read_csv(pd.read_csv('daily.csv'))
-    df = read_csv(pd.read_csv('daily_archive.csv'))
-    df = pd.concat([df, df_a[df_a['Day'] == df_a['Day'].max()]])
+    df = read_csv(pd.read_csv('daily.csv'))
+    # get modified csv
+    df_a = read_csv(pd.read_csv('daily_modi.csv'))
+    # merge based on Day and Tag
+    df = pd.merge(df, df_a, how='left', on=['Day', 'Tag',])
+    # move values from Time_x to Time_y if not nan
+    # update Time and Percentage columns using combine_first
+    df['Time'] = df['Time_y'].combine_first(df['Time_x'])
+    df['Percentage'] = df['Percentage_y'].combine_first(df['Percentage_x'])
+    # drop unneeded columns
+    df = df.drop(['Time_x', 'Time_y', 'Percentage_y', 'Percentage_x'], axis=1)
     del df_a
-    print(df.tail())
     # group by Tag and Day
-    # df = df.groupby(['Tag', 'Day']).sum().reset_index()
+    df = df.groupby(['Tag', 'Day']).sum().reset_index()
     df['Day of the week'] = df['Day'].dt.day_name()
     df['Productivity'] = df['Tag'].apply(lambda x: 1 if x in PRODUCTIVITY_LIST else 0)
     
